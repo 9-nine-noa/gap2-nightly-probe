@@ -304,7 +304,6 @@ RUN git clone --depth 1 https://github.com/opensourceways/copr_design.git /tmp/c
 
 ## ✅ 实施方案（方案 A）
 
-### 阶段 1：准备与确认（1-2 天）
 
 **检查清单：**
 - [ ] **确认 copr_design 更新频率**  
@@ -319,74 +318,9 @@ RUN git clone --depth 1 https://github.com/opensourceways/copr_design.git /tmp/c
 - [ ] **获得团队同意**  
   frontend 维护者、CI/CD 负责人、运维团队知情并同意
 
-**输出文档：**
-- 团队讨论会议纪要
-- 风险确认清单
-
 ---
 
-### 阶段 2：技术实施（2-3 小时）
-
-**步骤 1：备份当前状态**
-```bash
-cd /root/ai-workflow/copr_docker
-git checkout main
-git pull origin main
-
-# 创建备份分支
-git checkout -b backup/before-merge-copr-design
-git push origin backup/before-merge-copr-design
-```
-
-**步骤 2：创建实施分支**
-```bash
-git checkout main
-git checkout -b refactor/merge-copr-design-into-main
-```
-
-**步骤 3：初始化并保存 copr_design 内容**
-```bash
-# 初始化 submodule（如果还没初始化）
-git submodule update --init --recursive
-
-# 复制内容到临时目录
-cp -r docker/frontend/files/copr_design /tmp/copr_design_backup
-```
-
-**步骤 4：移除 submodule**
-```bash
-# 删除 .gitmodules
-git rm .gitmodules
-
-# 删除 submodule 目录（Git 追踪）
-git rm -r docker/frontend/files/copr_design
-
-# 提交删除
-git commit -m "refactor: 移除 copr_design submodule（准备合并）"
-```
-
-**步骤 5：添加 copr_design 内容为普通目录**
-```bash
-# 复制内容回来（作为普通目录，不是 submodule）
-cp -r /tmp/copr_design_backup/* docker/frontend/files/copr_design/
-
-# 删除 .git 目录（避免嵌套 git 仓库）
-rm -rf docker/frontend/files/copr_design/.git
-
-# 添加到 Git
-git add docker/frontend/files/copr_design/
-
-# 提交
-git commit -m "refactor: 合并 copr_design 内容到 copr_docker
-
-- 将 copr_design 从 git submodule 改为普通目录
-- 解决 AI workflow 的 umbrella 模式兼容性问题
-- 参考：backlog#1678, backlog#1822
-
-Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
-```
-
-**步骤 6：修改 GitHub Actions workflow**
+**修改 GitHub Actions workflow**
 ```bash
 # 编辑 .github/workflows/frontend-publish.yml
 # 删除或注释掉 submodule 相关行
@@ -397,7 +331,7 @@ git commit -m "ci: 移除 frontend-publish workflow 中的 submodule 初始化
 copr_design 已合并到主仓库，不再需要 git submodule 命令。"
 ```
 
-**步骤 7：更新文档**
+**更新文档**
 ```bash
 # 更新 CLAUDE.md
 # 删除关于 submodule 的说明，改为说明 copr_design 是普通目录
@@ -406,145 +340,15 @@ git add CLAUDE.md
 git commit -m "docs: 更新 CLAUDE.md 反映 copr_design 合并变更"
 ```
 
-**步骤 8：推送并创建 PR**
-```bash
-git push origin refactor/merge-copr-design-into-main
-
-# 创建 PR
-gh pr create --repo opensourceways/copr_docker \
-  --base main \
-  --head refactor/merge-copr-design-into-main \
-  --title "refactor: 合并 copr_design 到 copr_docker 主仓库" \
-  --body "## 背景
-
-解决 AI workflow 在检测代码变更时的兼容性问题（backlog#1678, backlog#1822）。
-
-## 变更内容
-
-- ✅ 移除 \`.gitmodules\` 中的 copr_design submodule
-- ✅ 将 copr_design 内容合并为普通目录
-- ✅ 修改 GitHub Actions workflow（移除 submodule 初始化）
-- ✅ 更新相关文档
-
-## 影响范围
-
-- ✅ 只影响 frontend 组件构建
-- ✅ 不影响其他 8 个组件
-- ✅ 不影响已部署的生产环境
-- ✅ Dockerfile 构建逻辑保持不变
-
-## 测试计划
-
-- [ ] 本地构建 frontend 镜像验证
-- [ ] GitHub Actions workflow 测试
-- [ ] AI workflow \`/ai-deploy-test\` 验证
-
-## 风险缓解
-
-- 保留 backup/before-merge-copr-design 分支用于回滚
-- 保留 copr_design 独立仓库不删除（历史构建可用）
-
-## 关联
-
-- opensourceways/backlog#1678
-- opensourceways/backlog#1822
-- 可行性报告：ai-workflow/copr_design_merge_feasibility_report.md"
-```
-
 ---
 
-### 阶段 3：测试验证（1-2 小时）
-
-**测试清单：**
-
-**测试 1：本地构建 frontend 镜像**
-```bash
-cd /root/ai-workflow/copr_docker
-git checkout refactor/merge-copr-design-into-main
-
-# 构建镜像
-cd docker/frontend
-docker build -t copr-frontend:test .
-
-# 验证
-docker images | grep copr-frontend
-docker run --rm copr-frontend:test ls -la /usr/share/copr/
-```
-
-**预期结果：**
-- ✅ 构建成功，无错误
-- ✅ `/usr/share/copr/` 包含前端资源
-- ✅ 镜像大小与之前相近
-
----
-
-**测试 2：GitHub Actions workflow**
-```bash
-# 手动触发 frontend-publish workflow
-# 或等待 PR 合入后自动触发
-```
-
-**预期结果：**
-- ✅ workflow 执行成功
-- ✅ 镜像推送到 SWR
-- ✅ 无 submodule 相关错误
-
----
-
-**测试 3：AI workflow 检测**
-```bash
-# PR 合入 copr_docker 后
-# 在 backlog#1678 评论
-/ai-deploy-test
-```
-
-**预期结果：**
-- ✅ workflow 检测到 copr_docker 的 issue-1678-from-main PR
-- ✅ 开始构建 9 个组件镜像
-- ✅ 测试发布成功
-
----
-
-### 阶段 4：监控与回滚准备（持续）
-
-**监控指标：**
-- GitHub Actions workflow 成功率
-- AI workflow 测试发布成功率
-- frontend 镜像构建时间
-- 团队反馈
-
-**回滚方案：**
-```bash
-# 如果出现严重问题，立即回滚
-git checkout main
-git revert <merge-commit-hash>
-git push origin main
-
-# 或强制回到备份分支
-git reset --hard backup/before-merge-copr-design
-git push origin main --force-with-lease
-```
-
----
-
-## 📊 成本收益分析
-
-### 短期成本（1-3 天）
-
-| 项目 | 工时估算 | 责任人 |
-|------|---------|--------|
-| 团队沟通与确认 | 2-4 小时 | 项目负责人 |
-| 技术实施 | 2-3 小时 | 开发工程师 |
-| 测试验证 | 1-2 小时 | QA/开发工程师 |
-| 文档更新 | 1 小时 | 开发工程师 |
-| **总计** | **6-10 小时** | - |
+## 📊 收益分析
 
 ### 长期收益（持续）
 
 **技术收益：**
 - ✅ 解决 AI workflow 兼容性问题（立即）
 - ✅ 简化构建依赖（减少 `git submodule` 复杂性）
-- ✅ 提升构建速度（减少网络 I/O）
 - ✅ 降低新人上手难度
 
 **业务收益：**
@@ -555,12 +359,6 @@ git push origin main --force-with-lease
 **技术债务：**
 - ⚠️ copr_design 独立更新能力降低
 - ⚠️ 需要建立前端资源同步机制（如果需要）
-
-**投资回报率（ROI）：**
-- 初期投入：6-10 小时
-- 每次节省：避免手动干预 AI workflow（~1 小时/次）
-- 预期 issue 频率：每月 2-4 次
-- **回本周期：2-3 个月**
 
 ---
 
@@ -616,12 +414,7 @@ git push origin main --force-with-lease
 - [ ] 是否有预算和时间支持？
 
 ---
-
-## 📞 联系与支持
-
-**评估报告作者：** AI Assistant (Claude Sonnet 5)  
-**技术顾问：** [待填写]  
-**项目负责人：** [待填写]  
+ 
 **相关 issue：**
 - opensourceways/backlog#1678
 - opensourceways/backlog#1822
@@ -633,16 +426,3 @@ git push origin main --force-with-lease
 
 ---
 
-## 📝 修订历史
-
-| 版本 | 日期 | 修订内容 | 作者 |
-|-----|------|---------|------|
-| v1.0 | 2026-08-20 | 初始版本 | Claude Sonnet 5 |
-
----
-
-**附录：**
-- 附录 A：Fedora COPR 与 openEuler copr_docker 架构对比
-- 附录 B：AI workflow 检测逻辑源码分析
-- 附录 C：实施脚本完整版
-- 附录 D：测试用例详细清单
