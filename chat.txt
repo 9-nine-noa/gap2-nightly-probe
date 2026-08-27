@@ -1,0 +1,1 @@
+换成可以 docker pull 的镜像 openeuler/nginx:1.21.5-oe2203lts 又会出现 ERROR: failed to build: failed to solve: process "/bin/sh -c dnf -y update && dnf -y in nosync && rm -f /etc/yum.repos.d/eur.repo" did not complete successfully: exit code: 1 **`No match for argument: nosync`**，即 DNF 找不到名为 `nosync` 的软件包。
