@@ -46,7 +46,7 @@ image: swr.cn-north-4.myhuaweicloud.com/opensourceway/copr/copr_database:54af68a
 | frontend | `opensourceways-w5peto.swr-pro.myhuaweicloud.com/opensourceway/copr_docker-frontend` | `v1.0.20230310174025`（时间戳版本） |
 | **database** | `swr.cn-north-4.myhuaweicloud.com/opensourceway/copr/copr_database` | `54af68a2`（commit SHA，旧版本管理方式） |
 
-结论：2023-03-10 那次迁移把 backend/frontend 等组件的生产镜像地址切到了新体系
+**结论**：2023-03-10 那次迁移把 backend/frontend 等组件的生产镜像地址切到了新体系
 （`opensourceways-w5peto.swr-pro.myhuaweicloud.com` + 时间戳 tag），但 **database
 被漏掉了**，一直停留在旧地址、旧 tag 格式。这次 AI workflow 用新规则构建推送的
 `copr_docker-database` 镜像，在生产配置里找不到匹配位置，所以报错——本质是"孤儿配置"
