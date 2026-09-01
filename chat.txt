@@ -1,1 +1,9 @@
-换成可以 docker pull 的镜像 openeuler/nginx:1.21.5-oe2203lts 又会出现 ERROR: failed to build: failed to solve: process "/bin/sh -c dnf -y update && dnf -y in nosync && rm -f /etc/yum.repos.d/eur.repo" did not complete successfully: exit code: 1 **`No match for argument: nosync`**，即 DNF 找不到名为 `nosync` 的软件包。
+问题本身只做诊断结论，供你参考：
+
+根因：frontend 日志中 500 的异常是 jinja2.exceptions.UndefinedError: 'csrf_token' is undefined。该部署（copr-frontend-1.200 RPM）从未初始化 CSRFProtect，Jinja 全局 csrf_token() 不存在；其他表单都用 WTForms 的 form.csrf_token 字段，唯独 package.html 第 31 行 “一键提 PR” 表单硬调了 {{ csrf_token() }}
+
+影响：所有有编辑权限的登录用户打开任何包详情页都会 500
+
+修法建议（如需）：删掉该行 hidden input 即可 —— copr_gitcode_pr 视图本身不校验这个 token，删掉无行为影响
+
+现在测试环境部署的是这个分支的代码，里面有你的一键提PR，现在打开package详情页会500
