@@ -1,9 +1,7 @@
-问题本身只做诊断结论，供你参考：
+按服务发布改造合入 （release-mgmt PR #458）：copr_docker 单仓多镜像拆为独立服务接入发布流水线，注册表映射 + 鉴权 + 兼容旧计划，216 单测全绿。
 
-根因：frontend 日志中 500 的异常是 jinja2.exceptions.UndefinedError: 'csrf_token' is undefined。该部署（copr-frontend-1.200 RPM）从未初始化 CSRFProtect，Jinja 全局 csrf_token() 不存在；其他表单都用 WTForms 的 form.csrf_token 字段，唯独 package.html 第 31 行 “一键提 PR” 表单硬调了 {{ csrf_token() }}
+2. backlog#2414 清理改造验证通过 ：终态瘦身、主动取消、日志 7 天 TTL 均实测生效，worker 修复可发布；3 项低风险遗留（到期清除/Rework 实测、孤儿取消日志 TTL）。
 
-影响：所有有编辑权限的登录用户打开任何包详情页都会 500
+3. 发布链路全通 ：运维修复注册表后，7 镜像构建→归档→ArgoCD→pre-release 全部成功；集成测试失败定位为统一认证环境 503（外部问题，已出报告 backlog#2433）。
 
-修法建议（如需）：删掉该行 hidden input 即可 —— copr_gitcode_pr 视图本身不校验这个 token，删掉无行为影响
-
-现在测试环境部署的是这个分支的代码，里面有你的一键提PR，现在打开package详情页会500
+4. 待推动 ：节点磁盘/inode 反复耗尽（批量驱逐根因，建议扩容）、worker 卷改共享 PVC、ai-dev-runner 恢复以启动正式发布
