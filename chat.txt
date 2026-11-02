@@ -111,3 +111,6 @@ AI 生成的 spec 文件和配置在复杂依赖、特殊软件包场景下仍�
 
 
 本阶段本人围绕安全组、EIP、WAF、地址组纳管与自动化目标，完成了需求边界梳理、架构方案设计及Schema规范制定，明确ForceNew触发、EIP带宽变更约束和WAF引用链依赖，按时产出方案设计文档、Schema定义表、凭据矩阵及分期排期计划。实施阶段推进资源同步与关系还原，重点验证共享EIP多对多绑定关系，跑通“EIP带宽扩容”“安全组白名单更新”两条Issue→PR自动化流水线及端到端用例；扩展地址组自动化场景，完成WAF纳管时机评估，并完善shared_with、charge_mode变更的PR告警文案与回归用例。最终跑通tofu-plan与tofu-apply全链路，完成真实变更闭环验证，对齐设计文档与落地代码，沉淀操作手册并完成高危操作二期方案设计。整体具备较强的需求分析、规范治理、跨模块协同和风险意识，后续将持续提升边缘场景覆盖与自动化安全性。
+
+
+解决的是「apply 以 region 为单位，会顺手把同 region 里别人在云端手改的资源拉回仓库旧值」的问题：新增`scripts/plan_guard.py` ，把`tofu show -json` 的计划变更反查`base..HEAD` 的 git diff，凡是「自基准以来没有任何提交声明过」的资源就判定为云端漂移导致的无关变更；apply 侧因此改成`tofu plan -out=tfplan` →`show -json` → 归属校验 →`apply tfplan` ，默认`block` （fail-closed，仓库变量`PLAN_GUARD_MODE` 未配/拼错都按拦截，只有显式`warn` 才降级，`force` 仅跳过`ipGroup-ci-*` 校验），拦截时只跳过该 region、不影响其它 region；PR 侧的 plan 评论只高亮不阻断；归属基准用每次成功 apply 后前进的`applied/<account>/<region>` tag，避免上一轮被拦的积压改动被误判；外部托管地址组只有 description/remarks 心跳时按无害处理。
