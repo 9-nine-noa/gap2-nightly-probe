@@ -1,0 +1,169 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">AI 引包端到端流水线</title>
+  <desc id="desc">AI 只负责判断，流程与质量由确定性系统兜底：用户输入、复用决策、依赖解析、spec 生成、质量门禁、COPR 构建、CI 验证、报告与回炉，包含复用短路、依赖闭环与失败修复闭环。</desc>
+
+  <rect width="1600" height="900" fill="#F7F9FC"/>
+
+  <g font-family="Noto Sans SC, Microsoft YaHei, PingFang SC, sans-serif">
+
+    <!-- 顶部标题 -->
+    <text x="80" y="62" font-size="12" font-weight="600" letter-spacing="2" fill="#2563EB">EUR · AI-IMPORT / 常规引包链路</text>
+    <text x="78" y="112" font-size="33" font-weight="700" fill="#10233F">AI 只负责判断，流程与质量由确定性系统兜底</text>
+    <text x="80" y="146" font-size="15" fill="#5B6B82">用户只给包名、上游地址与版本，系统完成复用判断、依赖引入、spec 生成、构建修复与报告</text>
+
+    <!-- 图例 -->
+    <rect x="1060" y="70" width="14" height="14" rx="3" fill="#FFFFFF" stroke="#8FA3BC" stroke-width="1.4"/>
+    <text x="1082" y="82" font-size="12" fill="#5B6B82">确定性流程</text>
+    <rect x="1230" y="70" width="14" height="14" rx="3" fill="#FFF7E8" stroke="#E9B45B" stroke-width="1.4"/>
+    <text x="1252" y="82" font-size="12" fill="#5B6B82">AI 参与</text>
+    <line x1="1060" y1="108" x2="1074" y2="108" stroke="#5B8DEF" stroke-width="2.2" stroke-dasharray="5 4"/>
+    <text x="1082" y="112" font-size="12" fill="#5B6B82">复用短路</text>
+    <line x1="1230" y1="108" x2="1244" y2="108" stroke="#D97706" stroke-width="2.2" stroke-dasharray="5 4"/>
+    <text x="1252" y="112" font-size="12" fill="#5B6B82">修复闭环</text>
+
+    <!-- 复用命中面板 -->
+    <rect x="196" y="180" width="664" height="100" rx="14" fill="#F2F7FF" stroke="#8DB6EA" stroke-width="1.6"/>
+    <text x="218" y="210" font-size="16" font-weight="700" fill="#1D4ED8">复用命中：先查后建，不重复造轮子</text>
+    <text x="218" y="236" font-size="12.5" fill="#3E5C85">官方源满足版本 → 直接复用；EUR 同 chroot → 复用 / 重建</text>
+    <text x="218" y="258" font-size="12.5" fill="#3E5C85">src-openeuler 已有 spec → 作为生成基线，只做版本与依赖适配</text>
+
+    <!-- 复用决策到复用面板 -->
+    <line x1="320" y1="338" x2="320" y2="296" stroke="#5B8DEF" stroke-width="2" stroke-dasharray="6 4"/>
+    <polygon points="320,282 313,293 327,293" fill="#5B8DEF"/>
+
+    <!-- 直接复用短路：面板到报告 -->
+    <path d="M860 230 H1472 V332" fill="none" stroke="#5B8DEF" stroke-width="2.2" stroke-dasharray="7 6"/>
+    <polygon points="1472,340 1466,329 1478,329" fill="#5B8DEF"/>
+    <text x="1120" y="216" font-size="12" fill="#2E5FA3" text-anchor="middle">直接复用，跳过构建</text>
+
+    <!-- 参考 spec 适配 -->
+    <line x1="704" y1="280" x2="704" y2="332" stroke="#5B8DEF" stroke-width="2" stroke-dasharray="6 4"/>
+    <polygon points="704,340 698,329 710,329" fill="#5B8DEF"/>
+    <text x="716" y="316" font-size="11.5" fill="#2E5FA3">参考 spec 适配</text>
+
+    <!-- 主流程箭头 -->
+    <g stroke="#8FA3BC" stroke-width="2.5">
+      <line x1="208" y1="395" x2="230" y2="395"/>
+      <line x1="400" y1="395" x2="422" y2="395"/>
+      <line x1="592" y1="395" x2="614" y2="395"/>
+      <line x1="784" y1="395" x2="806" y2="395"/>
+      <line x1="976" y1="395" x2="998" y2="395"/>
+      <line x1="1168" y1="395" x2="1190" y2="395"/>
+      <line x1="1360" y1="395" x2="1382" y2="395"/>
+    </g>
+    <g fill="#8FA3BC">
+      <polygon points="238,395 228,389 228,401"/>
+      <polygon points="430,395 420,389 420,401"/>
+      <polygon points="622,395 612,389 612,401"/>
+      <polygon points="814,395 804,389 804,401"/>
+      <polygon points="1006,395 996,389 996,401"/>
+      <polygon points="1198,395 1188,389 1188,401"/>
+      <polygon points="1390,395 1380,389 1380,401"/>
+    </g>
+
+    <!-- 节点 1 -->
+    <rect x="48" y="340" width="160" height="110" rx="12" fill="#FFFFFF" stroke="#C9D4E3" stroke-width="1.5"/>
+    <circle cx="68" cy="362" r="12" fill="#EAF1FF"/>
+    <text x="68" y="366" font-size="10.5" font-weight="700" fill="#1D4ED8" text-anchor="middle">01</text>
+    <text x="88" y="368" font-size="16" font-weight="700" fill="#10233F">用户输入</text>
+    <text x="62" y="404" font-size="12.2" fill="#5B6B82">包名 / 上游地址</text>
+    <text x="62" y="424" font-size="12.2" fill="#5B6B82">版本 / 目标 chroot</text>
+
+    <!-- 节点 2 -->
+    <rect x="240" y="340" width="160" height="110" rx="12" fill="#FFFFFF" stroke="#C9D4E3" stroke-width="1.5"/>
+    <circle cx="260" cy="362" r="12" fill="#EAF1FF"/>
+    <text x="260" y="366" font-size="10.5" font-weight="700" fill="#1D4ED8" text-anchor="middle">02</text>
+    <text x="280" y="368" font-size="16" font-weight="700" fill="#10233F">复用决策</text>
+    <text x="254" y="404" font-size="12.2" fill="#5B6B82">官方源 → EUR →</text>
+    <text x="254" y="424" font-size="12.2" fill="#5B6B82">社区 spec → 新建</text>
+
+    <!-- 节点 3 -->
+    <rect x="432" y="340" width="160" height="110" rx="12" fill="#FFFFFF" stroke="#C9D4E3" stroke-width="1.5"/>
+    <circle cx="452" cy="362" r="12" fill="#EAF1FF"/>
+    <text x="452" y="366" font-size="10.5" font-weight="700" fill="#1D4ED8" text-anchor="middle">03</text>
+    <text x="472" y="368" font-size="16" font-weight="700" fill="#10233F">依赖解析</text>
+    <text x="446" y="404" font-size="12.2" fill="#5B6B82">映射真实 RPM 依赖</text>
+    <text x="446" y="424" font-size="12.2" fill="#5B6B82">递归引入缺失包</text>
+
+    <!-- 节点 4：AI -->
+    <rect x="624" y="340" width="160" height="110" rx="12" fill="#FFF7E8" stroke="#E9B45B" stroke-width="1.8"/>
+    <circle cx="644" cy="362" r="12" fill="#FDE9C8"/>
+    <text x="644" y="366" font-size="10.5" font-weight="700" fill="#9A5B00" text-anchor="middle">04</text>
+    <text x="664" y="368" font-size="16" font-weight="700" fill="#9A5B00">spec 生成</text>
+    <text x="638" y="404" font-size="12.2" fill="#8A5A1F">参考优先 · 8 种语言</text>
+    <text x="638" y="424" font-size="12.2" fill="#8A5A1F">规则 + 历史经验</text>
+
+    <!-- 节点 5 -->
+    <rect x="816" y="340" width="160" height="110" rx="12" fill="#FFFFFF" stroke="#C9D4E3" stroke-width="1.5"/>
+    <circle cx="836" cy="362" r="12" fill="#EAF1FF"/>
+    <text x="836" y="366" font-size="10.5" font-weight="700" fill="#1D4ED8" text-anchor="middle">05</text>
+    <text x="856" y="368" font-size="16" font-weight="700" fill="#10233F">质量门禁</text>
+    <text x="830" y="404" font-size="12.2" fill="#5B6B82">rpmlint · provider</text>
+    <text x="830" y="424" font-size="12.2" fill="#5B6B82">rpmbuild 预检</text>
+
+    <!-- 节点 6 -->
+    <rect x="1008" y="340" width="160" height="110" rx="12" fill="#FFFFFF" stroke="#C9D4E3" stroke-width="1.5"/>
+    <circle cx="1028" cy="362" r="12" fill="#EAF1FF"/>
+    <text x="1028" y="366" font-size="10.5" font-weight="700" fill="#1D4ED8" text-anchor="middle">06</text>
+    <text x="1048" y="368" font-size="16" font-weight="700" fill="#10233F">COPR 构建</text>
+    <text x="1022" y="404" font-size="12.2" fill="#5B6B82">隔离环境 · 多架构</text>
+    <text x="1022" y="424" font-size="12.2" fill="#5B6B82">真实构建裁决</text>
+
+    <!-- 节点 7 -->
+    <rect x="1200" y="340" width="160" height="110" rx="12" fill="#FFFFFF" stroke="#C9D4E3" stroke-width="1.5"/>
+    <circle cx="1220" cy="362" r="12" fill="#EAF1FF"/>
+    <text x="1220" y="366" font-size="10.5" font-weight="700" fill="#1D4ED8" text-anchor="middle">07</text>
+    <text x="1240" y="368" font-size="16" font-weight="700" fill="#10233F">CI 验证</text>
+    <text x="1214" y="404" font-size="12.2" fill="#5B6B82">依赖闭合 · 可安装</text>
+    <text x="1214" y="424" font-size="12.2" fill="#5B6B82">真实环境验证</text>
+
+    <!-- 节点 8 -->
+    <rect x="1392" y="340" width="160" height="110" rx="12" fill="#EDF8F1" stroke="#86C9A3" stroke-width="1.8"/>
+    <circle cx="1412" cy="362" r="12" fill="#D7EFE1"/>
+    <text x="1412" y="366" font-size="10.5" font-weight="700" fill="#18794E" text-anchor="middle">08</text>
+    <text x="1432" y="368" font-size="16" font-weight="700" fill="#14532D">报告 / 回炉</text>
+    <text x="1406" y="404" font-size="12.2" fill="#2F6B4A">结果 / 日志 / 报告</text>
+    <text x="1406" y="424" font-size="12.2" fill="#2F6B4A">自然语言 Rework</text>
+
+    <!-- 依赖闭环 -->
+    <rect x="356" y="520" width="312" height="72" rx="12" fill="#EAF7F4" stroke="#7FC8B8" stroke-width="1.5"/>
+    <text x="512" y="547" font-size="13.5" font-weight="700" fill="#0F6B5C" text-anchor="middle">依赖闭环</text>
+    <text x="512" y="571" font-size="11.2" fill="#2C7A6B" text-anchor="middle">缺依赖 → 注册 → 构建 → 就绪继续</text>
+    <line x1="470" y1="450" x2="470" y2="508" stroke="#2A9D8F" stroke-width="2.1" stroke-dasharray="6 4"/>
+    <polygon points="470,520 464,509 476,509" fill="#2A9D8F"/>
+    <line x1="554" y1="508" x2="554" y2="462" stroke="#2A9D8F" stroke-width="2.1" stroke-dasharray="6 4"/>
+    <polygon points="554,450 548,461 560,461" fill="#2A9D8F"/>
+
+    <!-- 失败修复闭环 -->
+    <rect x="760" y="646" width="460" height="96" rx="14" fill="#FFF7E8" stroke="#E9B45B" stroke-width="1.8"/>
+    <text x="782" y="677" font-size="15.5" font-weight="700" fill="#9A5B00">AI 失败诊断与修复</text>
+    <text x="782" y="702" font-size="11.8" fill="#8A5A1F">提取日志 → 归类 → 修改 spec → 重新提交（有轮次预算）</text>
+    <text x="782" y="724" font-size="11.2" fill="#A16A2B">轮次上限 · 无输出熔断，避免无限重试</text>
+
+    <line x1="930" y1="450" x2="930" y2="634" stroke="#D97706" stroke-width="2.1" stroke-dasharray="6 4"/>
+    <polygon points="930,646 924,635 936,635" fill="#D97706"/>
+    <text x="940" y="575" font-size="11" fill="#B45309">门禁未过</text>
+
+    <line x1="1088" y1="450" x2="1088" y2="634" stroke="#D97706" stroke-width="2.1" stroke-dasharray="6 4"/>
+    <polygon points="1088,646 1082,635 1094,635" fill="#D97706"/>
+    <text x="1098" y="575" font-size="11" fill="#B45309">构建失败</text>
+
+    <path d="M760 692 H704 V462" fill="none" stroke="#D97706" stroke-width="2.1" stroke-dasharray="6 4"/>
+    <polygon points="704,450 698,461 710,461" fill="#D97706"/>
+
+    <!-- 底部结论 -->
+    <rect x="48" y="800" width="1504" height="60" rx="14" fill="#10233F"/>
+    <text x="80" y="826" font-size="11" font-weight="600" letter-spacing="1.5" fill="#93C5FD">一句话记住</text>
+    <text x="80" y="847" font-size="16" font-weight="700" fill="#FFFFFF">判断可以智能，结论必须可验证</text>
+
+    <rect x="820" y="814" width="160" height="32" rx="16" fill="#1C3355"/>
+    <text x="900" y="835" font-size="12.5" fill="#E7EEF9" text-anchor="middle">复用优先</text>
+    <rect x="992" y="814" width="160" height="32" rx="16" fill="#1C3355"/>
+    <text x="1072" y="835" font-size="12.5" fill="#E7EEF9" text-anchor="middle">依赖先行</text>
+    <rect x="1164" y="814" width="190" height="32" rx="16" fill="#1C3355"/>
+    <text x="1259" y="835" font-size="12.5" fill="#E7EEF9" text-anchor="middle">真实构建裁决</text>
+    <rect x="1366" y="814" width="150" height="32" rx="16" fill="#1C3355"/>
+    <text x="1441" y="835" font-size="12.5" fill="#E7EEF9" text-anchor="middle">失败闭环</text>
+
+  </g>
+</svg>
