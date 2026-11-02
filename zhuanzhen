@@ -69,3 +69,9 @@ AI 引包场景
 copr_docker 原本采用「多仓 + git submodule」的组织方式，前端静态资源独立在 copr_design 仓库，通过 submodule 挂到 frontend 组件下。接入 AI workflow 后，umbrella 模式要求每个 submodule 根目录必须有 Dockerfile，才能被识别为可构建子服务；而 copr_design 是纯静态资源仓库、根目录没有 Dockerfile，导致它的变更无法进入流水线，测试发布直接报「本 issue 没有变更子服务」。同时，组件边界、依赖关系和发布入口分散在多个仓库，AI workflow 无法形成统一的变更识别与发布链路。
 
 把 copr_docker 改造成标准 umbrella 仓：重写 CLAUDE.md 明确服务定位、技术栈、组件职责和依赖接口，新增 preview.sh 作为 9 个组件的统一预览部署入口；同时把 copr_design 从 submodule 合并为主仓普通目录，删除`.gitmodules` 、并入约 5900 行前端静态资产、移除 CI 中的 submodule init/update，并统一修正各组件的 Dockerfile COPY 路径，保证单仓多镜像能真正构建。最终通过 2 个合并 PR（#133、#135）完成 39 个文件、5918 行变更，移除 1 个 submodule，把 9 个组件收敛为 1 个仓、1 套 CI，前端变更从「无法被识别」变为「可自动触发构建、预览和发布」，测试发布不再出现「没有变更子服务」。
+
+## 问题背景
+改成 umbrella 单仓后，AI workflow 的`dockerfile_dirs` 模式统一以 仓库根目录 作为 Docker 构建上下文，但各组件 Dockerfile 仍沿用原来的写法`COPY files/ /` ——它默认构建上下文就是组件目录。同一个 Dockerfile，换成仓库根目录后，`COPY` 的源路径就指向了不存在的`/files` ，导致所有镜像构建失败。问题不在 Dockerfile 本身，而在于 构建上下文这个隐式契约变了 。
+
+## 做了什么与结果
+统一调整各组件的 Dockerfile，把相对组件目录的`COPY` 路径改为相对仓库根目录：`COPY files/ /` →`COPY docker/<component>/files/ /` ，覆盖 frontend、backend、backend_httpd、builder、distgit、keygen-httpd、keygen-signd、resalloc。修复后所有镜像在 umbrella 模式下恢复可构建，同时明确了单仓多镜像的构建契约： 所有镜像共用仓库根目录作为上下文，Dockerfile 内部路径必须从根目录起算 。
