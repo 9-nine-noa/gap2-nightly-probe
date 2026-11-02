@@ -78,3 +78,9 @@ copr_docker 原本采用「多仓 + git submodule」的组织方式，前端静�
 
 
 copr_docker 承载的是 openEuler 社区的 EUR 软件包构建平台，包含 frontend、backend、builder、distgit、keygen、resalloc 等多个组件和多套镜像，任何一次组件变更都涉及构建、联调、预览和发布，过去高度依赖人工判断和手工操作。随着平台迭代加快、组件数量增加，团队希望把变更识别、镜像构建、预览部署和发布验证交给 AI workflow 自动完成，让每次提交都能被流水线正确感知并走完端到端交付。但仓库原有的「多仓 + git submodule」结构与 AI workflow 的 umbrella 模型不匹配：前端静态资源 copr_design 作为 submodule 没有 Dockerfile，AI workflow 无法把它识别为可构建子服务，前端改动进不了流水线，测试发布会直接报「本 issue 没有变更子服务」；同时组件边界、依赖关系和发布入口分散，流水线也难以形成统一的变更识别与发布链路。因此，把 copr_docker 改造成标准 umbrella 单仓，本质上不是一次仓库整理，而是让平台具备被 AI workflow 正确识别、构建、预览和发布的先决条件—— 让仓库从「人能看懂」变成「流水线能读懂」，后续的自动化交付才真正成立。
+
+
+## 计划归属校验（plan_guard）
+问题背景 ：apply 以 region 为单位，而云上允许应急手改。只改一条规则、合并后，同 region 内别人手工改过的 EIP、SFS、地址组会被一并拉回配置值；`tofu plan` 只显示有变更，不说明哪几处是你声明的，于是变更静默丢失。
+
+做了什么、成果 ：引入一道独立于 plan 的归属判定：把`tofu show -json` 的资源变更与`base..HEAD` 的 git diff 交叉比对，解析每个`resource` 块的行号区间，diff 命中的即算“声明过”；计划要改但没人声明过的判为无关变更。基准取该 region 上次成功 apply 的 tag，避免积压改动被误判；对 import 认领、整块删除、全局文件改动、外部托管地址组心跳漂移单独处理。PR 阶段只提示并给出可复制的`/absorb` 命令，apply 阶段硬拦截，默认 fail-closed 且无旁路。效果是把静默覆盖变成显式拦截，并催生了按敏感度分级的`/absorb` 吸收通道，覆盖注册表内全部账号与 region。
