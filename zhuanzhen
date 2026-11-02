@@ -65,3 +65,11 @@ AI 引包场景
 1. 这不是一个“跳转按钮”，而是一条从构建产物到官方仓库的自动化交付链路。
 2. AI 引包负责把包做出来，一键提 PR 负责把包送回去，两者合起来才是完整闭环。
 3. 实现上最难的不是调 API，而是把身份归属、幂等、防重、安全限频和 GitCode 的真实接口差异都处理干净。
+
+copr_docker 原本采用「多仓 + git submodule」的组织方式，前端静态资源独立在 copr_design 仓库，通过 submodule 挂到 frontend 组件下。接入 AI workflow 后，umbrella 模式要求每个 submodule 根目录必须有 Dockerfile，才能被识别为可构建子服务；而 copr_design 是纯静态资源仓库、根目录没有 Dockerfile，导致它的变更无法进入流水线，测试发布直接报「本 issue 没有变更子服务」。同时，组件边界、依赖关系和发布入口分散在多个仓库，AI workflow 无法形成统一的变更识别与发布链路。
+
+## 做了什么
+先把 copr_docker 改造成标准 umbrella 仓：重写 CLAUDE.md，明确服务定位、技术栈、组件职责和依赖接口；新增`.ai-flow/deploy/preview.sh` ，作为 9 个组件的统一预览部署入口。随后把 copr_design 从 submodule 合并为主仓普通目录：删除`.gitmodules` 和 submodule 引用，将约 5900 行前端静态资产并入`docker/frontend/files/copr_design` ，移除`frontend-publish` workflow 中的 submodule init/update，并同步更新文档。最后补齐单仓多镜像的构建契约，统一修正各组件的 Dockerfile COPY 路径，保证改造后镜像能真正构建出来。
+
+## 可量化成果
+改造包含 2 个合并 PR（#133、#135，另有 2 个关闭的重复 PR），共 39 个文件、5918 行变更，移除 1 个 submodule，把 9 个组件收敛为 1 个仓、1 套 CI。效果上，前端变更从「无法被 AI workflow 识别」变为「可自动触发构建、预览和发布」，测试发布不再出现「没有变更子服务」；本地开发也从「多仓 clone + submodule init」简化为「单仓 clone 即可构建」。
