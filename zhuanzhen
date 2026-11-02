@@ -96,3 +96,9 @@ SFS 原来完全在控制台管理，扩容要找人改 Terraform、提 PR，既
 
 
 1 设计账号注册表作为唯一事实源，并把凭据改为按账号隔离的 Environment，同时实现账号纳管全流程自动化。 纳管规模扩展到 2 个账号、5 个 region；新增账号只需修改 1 处注册表并提交 1 次表单；PR 阶段拥有 0 写权限。 2 编写 SFS Turbo 同步脚本，并建成从 issue 到 PR 的扩容流水线，包含按规格精确校验扩容步长和失败自动回帖。 新增 1 类纳管资源，覆盖 3 个 region；扩容不再需要手写配置，提交 1 个 issue 即可完成。 3 开发计划归属校验，把 plan 变更与 git 区间按资源块比对，并在 apply 前硬性拦截；同时配套开发`/absorb` 漂移吸收通道。 覆盖全部 5 个 account-region，默认 block 且无旁路；3 类无害漂移可一键吸收，3 类敏感变更强制人工确认。 4 优化流水线效率：执行矩阵按 diff 裁剪、同账号串行 apply，并让评论就地更新。 典型单 region 变更的 job 数从 5 个降到 1 个，约降 80%；PR 评论固定为 1 条。
+
+
+1 将 copr_design 从 git submodule 合并为主仓普通目录，移除`.gitmodules` 和 CI 中的 submodule 初始化，并通过 CLAUDE.md 与 preview.sh 固化 9 个组件的职责、依赖和预览部署方式。 通过 2 个合并 PR 完成改造，主合并涉及 39 个文件、5918 行变更，移除 1 个 submodule，使 9 个组件共用 1 个仓、1 套 CI 和 1 个统一预览入口，前端变更从无法识别变为可自动触发流水线。 
+2 统一修正 8 个组件的 Dockerfile COPY 路径，使其适配 umbrella 模式下以仓库根目录为构建上下文的规则。 修改 8 个 Dockerfile、9 行路径，使 8 个镜像在单仓模式下全部恢复可构建。 
+3 按真实运行时依赖重构预览环境，移除 builder、keygen-httpd 和自建 database，补充 Redis 与 ai-importer-worker。 预览组件从 9 个收敛为 8 个真实运行单元，单次测试发布少构建 3 个无效镜像，AI 引包链路可在合并前端到端预览。 
+4 排查并修复 AI workflow 测试发布中的构建链路问题，覆盖 EUR repodata 过期、mock 配置冲突、distgit 依赖不可解析、repoquery 版本未钉死和 resalloc 数据库迁移等根因。 通过 11 个 commit 收敛 5 类根因，恢复 8 个镜像的测试发布链路，使发布从持续失败恢复到可稳定出包。
