@@ -1,4 +1,16 @@
-仓库结构 主仓 + copr_design submodule 单仓，9 个组件目录 
-前端变更识别 无法识别，测试发布失败 可自动触发构建、预览、发布 
-构建上下文 组件目录，各写各的 仓库根目录，统一契约 镜像构建 单仓模式下 8 个 Dockerfile COPY 失效 8/8 
-恢复构建 开发准备 clone 主仓 + submodule init/update 单仓 clone 即可
+我先排除了两个看似更省事的方案：给 copr_design 补一个空 Dockerfile，只是把「识别不到」变成「构建一个不存在的服务」，多仓割裂依旧；
+改 AI workflow 去特判静态 submodule，则是为一个仓改公共平台，后续每个类似仓库都要加特例。
+最终选择把 copr_design 合并为主仓普通目录，让 9 个组件回到同一个仓、同一套发布入口。
+
+合并后又暴露了第二个问题：umbrella 模式统一用仓库根目录作为构建上下文，而 8 个 Dockerfile 仍按「组件目录」写`COPY files/ /` ，路径全部失效。
+这里我没有改 CI 去兼容组件目录，因为那会破坏 umbrella 的统一契约，让本地和 CI 的构建语义再次分叉；
+而是统一改成`COPY docker/<component>/files/ /` ，用 9 行一次性修正，把「根目录作为上下文」变成明确约定。
+
+前端代码放在 submodule 中，根目录没有 Dockerfile，AI workflow 无法识别这些前端变更，测试发布会报“没有变更子服务”
+单仓内的 9 个组件被统一识别，变更可以自动触发构建、预览和发布    9 个组件 → 1 个仓、1 套发布入口；移除 1 个 submodule
+
+单仓模式下，构建上下文变为仓库根目录，8 个 Dockerfile 的 COPY 路径失效
+统一改为`COPY docker/<component>/files/` ，8 个镜像全部恢复构建    8/8 镜像可构建；共修正 9 行路径
+
+预览环境缺少 Redis 和 ai-importer-worker，AI 引包无法端到端验证
+按真实依赖图补齐组件，合并前即可验证    移除 3 个冗余镜像；补齐 2 个必需组件；预览单元从 9 个变为 8 个
