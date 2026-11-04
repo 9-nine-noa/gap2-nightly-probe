@@ -1,3 +1,4 @@
-copr_docker 原本采用「主仓 + copr_design submodule」的多仓结构。接入 AI workflow 后，umbrella 模式要求每个 submodule 根目录必须有 Dockerfile，才能被识别为可构建子服务，
-而 copr_design 是纯静态资源、没有 Dockerfile，导致前端变更无法进入流水线，测试发布直接报「本 issue 没有变更子服务」。
-同时，多仓结构让组件边界、依赖关系和发布入口分散，变更是否会被发布，很大程度上依赖人工判断。
+仓库结构 主仓 + copr_design submodule 单仓，9 个组件目录 
+前端变更识别 无法识别，测试发布失败 可自动触发构建、预览、发布 
+构建上下文 组件目录，各写各的 仓库根目录，统一契约 镜像构建 单仓模式下 8 个 Dockerfile COPY 失效 8/8 
+恢复构建 开发准备 clone 主仓 + submodule init/update 单仓 clone 即可
